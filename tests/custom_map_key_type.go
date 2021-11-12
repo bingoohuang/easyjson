@@ -1,6 +1,6 @@
 package tests
 
-import fmt "fmt"
+import "fmt"
 
 //easyjson:json
 type CustomMapKeyType struct {

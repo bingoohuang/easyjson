@@ -484,7 +484,7 @@ func camelToSnake(name string) string {
 
 	for _, c := range name {
 		// Non-lowercase character after uppercase is considered to be uppercase too.
-		isUpper := (unicode.IsUpper(c) || (lastUpper != 0 && !unicode.IsLower(c)))
+		isUpper := unicode.IsUpper(c) || (lastUpper != 0 && !unicode.IsLower(c))
 
 		if lastUpper != 0 {
 			// Output a delimiter if last character was either the first uppercase character
@@ -503,7 +503,7 @@ func camelToSnake(name string) string {
 		// Buffer uppercase char, do not output it yet as a delimiter may be required if the
 		// next character is lowercase.
 		if isUpper {
-			multipleUpper = (lastUpper != 0)
+			multipleUpper = lastUpper != 0
 			lastUpper = c
 			continue
 		}

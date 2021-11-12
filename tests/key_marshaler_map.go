@@ -16,5 +16,5 @@ func (f *KeyWithEncodingMarshaler) UnmarshalText(text []byte) error {
 //easyjson:json
 type KeyWithEncodingMarshalers map[KeyWithEncodingMarshaler]string
 
-var mapWithEncodingMarshaler KeyWithEncodingMarshalers = KeyWithEncodingMarshalers{5: "hello"}
+var mapWithEncodingMarshaler = KeyWithEncodingMarshalers{5: "hello"}
 var mapWithEncodingMarshalerString = `{"hello":"hello"}`
