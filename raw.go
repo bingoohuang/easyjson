@@ -20,7 +20,7 @@ func (v *RawMessage) MarshalEasyJSON(w *jwriter.Writer) {
 
 // UnmarshalEasyJSON does JSON unmarshaling using easyjson interface.
 func (v *RawMessage) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	*v = RawMessage(l.Raw())
+	*v = l.Raw()
 }
 
 // UnmarshalJSON implements encoding/json.Unmarshaler interface.
