@@ -6,11 +6,11 @@ package jlexer
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/bingoohuang/easyjson/intern"
+	"github.com/cristalhq/base64"
 	"io"
 	"strconv"
 	"unicode"
