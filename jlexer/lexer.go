@@ -10,13 +10,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bingoohuang/easyjson/intern"
 	"io"
 	"strconv"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
-
-	"github.com/josharian/intern"
 )
 
 // tokenKind determines type of a token.
