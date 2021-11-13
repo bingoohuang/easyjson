@@ -54,11 +54,7 @@ generate: build
 	bin/easyjson -disable_members_unescape ./tests/members_unescaped.go
 
 test: generate
-	go test \
-		./tests \
-		./jlexer \
-		./gen \
-		./buffer
+	go test ./...
 	cd benchmark && go test -benchmem -tags use_easyjson -bench .
 	golint -set_exit_status ./tests/*_easyjson.go
 
