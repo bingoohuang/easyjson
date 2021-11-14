@@ -2,6 +2,7 @@
 package easyjson
 
 import (
+	"github.com/bingoohuang/easyjson/bytebufferpool"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -93,6 +94,13 @@ func MarshalToHTTPResponseWriter(v Marshaler, w http.ResponseWriter) (started bo
 	started = true
 	written, err = jw.DumpTo(w)
 	return
+}
+
+// UnmarshalPool decodes the JSON in data into the object.
+func UnmarshalPool(pool *bytebufferpool.Pool, data []byte, v Unmarshaler) (bytebufferpool.PoolReturner, error) {
+	l := &jlexer.Lexer{Data: data, Pool: pool}
+	v.UnmarshalEasyJSON(l)
+	return l, l.Error()
 }
 
 // Unmarshal decodes the JSON in data into the object.

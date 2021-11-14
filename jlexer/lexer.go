@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bingoohuang/easyjson/bytebufferpool"
 	"github.com/bingoohuang/easyjson/intern"
 	"github.com/cristalhq/base64"
 	"io"
@@ -54,6 +55,19 @@ type Lexer struct {
 	UseMultipleErrors bool          // If we want to use multiple errors.
 	fatalError        error         // Fatal error occurred during lexing. It is usually a syntax error.
 	multipleErrors    []*LexerError // Semantic errors occurred during lexing. Marshalling will be continued after finding this errors.
+
+	Pool        *bytebufferpool.Pool
+	PoolBuffers []*bytebufferpool.ByteBuffer
+}
+
+func (r *Lexer) ReturnPool() {
+	if r.Pool == nil {
+		return
+	}
+	for _, bb := range r.PoolBuffers {
+		r.Pool.Put(bb)
+	}
+	r.PoolBuffers = nil
 }
 
 // FetchToken scans the input for the next token.
@@ -715,7 +729,16 @@ func (r *Lexer) Bytes() []byte {
 		r.errInvalidToken("string")
 		return nil
 	}
-	ret := make([]byte, base64.StdEncoding.DecodedLen(len(r.token.byteValue)))
+
+	var ret []byte
+	decodedLen := base64.StdEncoding.DecodedLen(len(r.token.byteValue))
+	if r.Pool == nil {
+		ret = make([]byte, decodedLen)
+	} else {
+		buffer := r.Pool.Get(bytebufferpool.WithMinSize(decodedLen))
+		r.PoolBuffers = append(r.PoolBuffers, buffer)
+		ret = buffer.B
+	}
 	n, err := base64.StdEncoding.Decode(ret, r.token.byteValue)
 	if err != nil {
 		r.fatalError = &LexerError{
