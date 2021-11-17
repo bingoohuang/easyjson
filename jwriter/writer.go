@@ -62,7 +62,7 @@ func (w *Writer) RawByte(c byte) {
 	w.Buffer.AppendByte(c)
 }
 
-// RawByte appends raw binary data to the buffer.
+// RawString appends raw binary data to the buffer.
 func (w *Writer) RawString(s string) {
 	w.Buffer.AppendString(s)
 }
