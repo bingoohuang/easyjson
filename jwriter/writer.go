@@ -3,10 +3,12 @@ package jwriter
 
 import (
 	"github.com/bingoohuang/easyjson/buffer"
+	"github.com/bingoohuang/easyjson/bytebufferpool"
 	"github.com/cristalhq/base64"
 	"io"
 	"strconv"
 	"unicode/utf8"
+	"unsafe"
 )
 
 // Flags describe various encoding options. The behavior may be actually implemented in the encoder, but
@@ -110,7 +112,25 @@ func (w *Writer) Base64Bytes(data []byte) {
 		return
 	}
 	w.Buffer.AppendByte('"')
-	w.Buffer.AppendBytes(base64.StdEncoding.EncodeToBytes(data))
+	dstLen := base64.StdEncoding.EncodedLen(len(data))
+	b := bytebufferpool.Get(bytebufferpool.WithMinSize(dstLen))
+	b.Reset()
+	base64.StdEncoding.Encode(b.B, data)
+
+	(*Slice)(unsafe.Pointer(&b.B)).Len += dstLen // increase length manually
+	w.Buffer.AppendBytes(b.B)
+	bytebufferpool.Put(b)
+	w.Buffer.AppendByte('"')
+}
+
+// Base64BytesOld appends data to the buffer after base64 encoding it
+func (w *Writer) Base64BytesOld(data []byte) {
+	if data == nil {
+		w.Buffer.AppendString("null")
+		return
+	}
+	w.Buffer.AppendByte('"')
+	w.base64(data)
 	w.Buffer.AppendByte('"')
 }
 
@@ -364,4 +384,45 @@ func (w *Writer) String(s string) {
 	}
 	w.Buffer.AppendString(s[p:])
 	w.Buffer.AppendByte('"')
+}
+
+const encode = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+const padChar = '='
+
+func (w *Writer) base64(in []byte) {
+	if len(in) == 0 {
+		return
+	}
+
+	w.Buffer.EnsureSpace(((len(in)-1)/3 + 1) * 4)
+
+	si := 0
+	n := (len(in) / 3) * 3
+
+	for si < n {
+		// Convert 3x 8bit source bytes into 4 bytes
+		val := uint(in[si+0])<<16 | uint(in[si+1])<<8 | uint(in[si+2])
+		w.Buffer.Buf = append(w.Buffer.Buf, encode[val>>18&0x3F], encode[val>>12&0x3F], encode[val>>6&0x3F], encode[val&0x3F])
+		si += 3
+	}
+
+	remain := len(in) - si
+	if remain == 0 {
+		return
+	}
+
+	// Add the remaining small block
+	val := uint(in[si+0]) << 16
+	if remain == 2 {
+		val |= uint(in[si+1]) << 8
+	}
+
+	w.Buffer.Buf = append(w.Buffer.Buf, encode[val>>18&0x3F], encode[val>>12&0x3F])
+
+	switch remain {
+	case 2:
+		w.Buffer.Buf = append(w.Buffer.Buf, encode[val>>6&0x3F], byte(padChar))
+	case 1:
+		w.Buffer.Buf = append(w.Buffer.Buf, byte(padChar), byte(padChar))
+	}
 }
