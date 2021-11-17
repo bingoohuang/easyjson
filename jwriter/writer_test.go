@@ -1,8 +1,8 @@
 package jwriter
 
 import (
-	"github.com/bingoohuang/easyjson/buffer"
-	cbase64 "github.com/cristalhq/base64"
+	stdbase64 "encoding/base64"
+	"github.com/cristalhq/base64"
 	"math/rand"
 	"testing"
 	"time"
@@ -10,24 +10,22 @@ import (
 
 var token = func() []byte {
 	rand.Seed(time.Now().UnixNano())
-	token := make([]byte, 10240)
+	token := make([]byte, 1024)
 	rand.Read(token)
 	return token
 }()
 
 func BenchmarkWriter_Base64(b *testing.B) {
-	var buf buffer.Buffer
-
 	for i := 0; i < b.N; i++ {
-		base64(&buf, token)
+		stdbase64.StdEncoding.EncodeToString(token)
 	}
 }
 
 func BenchmarkWriter_Cristalhq(b *testing.B) {
-	buf := make([]byte, cbase64.StdEncoding.EncodedLen(len(token)))
+	buf := make([]byte, base64.StdEncoding.EncodedLen(len(token)))
 
 	for i := 0; i < b.N; i++ {
-		cbase64.StdEncoding.Encode(buf, token)
+		base64.StdEncoding.Encode(buf, token)
 	}
 }
 

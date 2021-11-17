@@ -3,11 +3,10 @@ package jwriter
 
 import (
 	"github.com/bingoohuang/easyjson/buffer"
-	cbase64 "github.com/cristalhq/base64"
+	"github.com/cristalhq/base64"
 	"io"
 	"strconv"
 	"unicode/utf8"
-	"unsafe"
 )
 
 // Flags describe various encoding options. The behavior may be actually implemented in the encoder, but
@@ -99,7 +98,7 @@ func (w *Writer) RawText(data []byte, err error) {
 }
 
 type Slice struct {
-	Data unsafe.Pointer
+	Data uintptr
 	Len  int
 	Cap  int
 }
@@ -111,14 +110,7 @@ func (w *Writer) Base64Bytes(data []byte) {
 		return
 	}
 	w.Buffer.AppendByte('"')
-	l := cbase64.StdEncoding.EncodedLen(len(data))
-	w.Buffer.EnsureSpace(l)
-
-	cbase64.StdEncoding.Encode(w.Buffer.Buf[len(w.Buffer.Buf):], data)
-
-	// increase length manually
-	(*Slice)(unsafe.Pointer(&w.Buffer.Buf)).Len += l
-
+	w.Buffer.AppendBytes(base64.StdEncoding.EncodeToBytes(data))
 	w.Buffer.AppendByte('"')
 }
 
@@ -372,47 +364,4 @@ func (w *Writer) String(s string) {
 	}
 	w.Buffer.AppendString(s[p:])
 	w.Buffer.AppendByte('"')
-}
-
-const encode = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-const padChar = '='
-
-func base64(buffer *buffer.Buffer, in []byte) {
-	if len(in) == 0 {
-		return
-	}
-
-	buffer.EnsureSpace(((len(in)-1)/3 + 1) * 4)
-
-	si := 0
-	n := (len(in) / 3) * 3
-
-	for si < n {
-		// Convert 3x 8bit source bytes into 4 bytes
-		val := uint(in[si+0])<<16 | uint(in[si+1])<<8 | uint(in[si+2])
-
-		buffer.Buf = append(buffer.Buf, encode[val>>18&0x3F], encode[val>>12&0x3F], encode[val>>6&0x3F], encode[val&0x3F])
-
-		si += 3
-	}
-
-	remain := len(in) - si
-	if remain == 0 {
-		return
-	}
-
-	// Add the remaining small block
-	val := uint(in[si+0]) << 16
-	if remain == 2 {
-		val |= uint(in[si+1]) << 8
-	}
-
-	buffer.Buf = append(buffer.Buf, encode[val>>18&0x3F], encode[val>>12&0x3F])
-
-	switch remain {
-	case 2:
-		buffer.Buf = append(buffer.Buf, encode[val>>6&0x3F], byte(padChar))
-	case 1:
-		buffer.Buf = append(buffer.Buf, byte(padChar), byte(padChar))
-	}
 }
