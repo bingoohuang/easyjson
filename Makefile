@@ -29,6 +29,7 @@ generate: build
 		./tests/escaping.go
 	bin/easyjson -all \
 		./tests/data.go \
+		./tests/p150k.go \
  		./tests/nothing.go \
  		./tests/errors.go \
  		./tests/html.go \
