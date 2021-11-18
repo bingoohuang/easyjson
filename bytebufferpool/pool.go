@@ -36,6 +36,10 @@ type PoolReturner interface {
 	ReturnPool()
 }
 
+type PoolReturnFn func()
+
+func (f PoolReturnFn) ReturnPool() { f() }
+
 var defaultPool Pool
 
 type GetOptions struct {

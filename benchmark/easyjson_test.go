@@ -4,6 +4,7 @@
 package benchmark
 
 import (
+	"github.com/bingoohuang/easyjson/bytebufferpool"
 	"testing"
 
 	"github.com/bingoohuang/easyjson"
@@ -45,6 +46,22 @@ func BenchmarkEJ_Marshal_M(b *testing.B) {
 	b.SetBytes(l)
 }
 
+func BenchmarkEJ_Marshal_M_Pool(b *testing.B) {
+	var l int64
+	pool := &bytebufferpool.Pool{}
+	for i := 0; i < b.N; i++ {
+		data, poolReturner, err := easyjson.MarshalPool(pool, &largeStructData)
+		if err != nil {
+			b.Error(err)
+		}
+		if poolReturner != nil {
+			poolReturner.ReturnPool()
+		}
+		l = int64(len(data))
+	}
+	b.SetBytes(l)
+}
+
 func BenchmarkEJ_Marshal_L(b *testing.B) {
 	var l int64
 	for i := 0; i < b.N; i++ {
@@ -53,6 +70,22 @@ func BenchmarkEJ_Marshal_L(b *testing.B) {
 			b.Error(err)
 		}
 		l = int64(len(data))
+	}
+	b.SetBytes(l)
+}
+
+func BenchmarkEJ_Marshal_L_Pool(b *testing.B) {
+	var l int64
+	pool := &bytebufferpool.Pool{}
+	for i := 0; i < b.N; i++ {
+		data, poolReturner, err := easyjson.MarshalPool(pool, &xlStructData)
+		if err != nil {
+			b.Error(err)
+		}
+		l = int64(len(data))
+		if poolReturner != nil {
+			poolReturner.ReturnPool()
+		}
 	}
 	b.SetBytes(l)
 }

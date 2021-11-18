@@ -48,6 +48,20 @@ func isNilInterface(i interface{}) bool {
 	return (*[2]uintptr)(unsafe.Pointer(&i))[1] == 0
 }
 
+// MarshalPool returns data as a single byte slice. Method is suboptimal as the data is likely to be copied
+// from a chain of smaller chunks.
+func MarshalPool(pool *bytebufferpool.Pool, v Marshaler) ([]byte, bytebufferpool.PoolReturner, error) {
+	if isNilInterface(v) {
+		return nullBytes, nil, nil
+	}
+
+	w := jwriter.Writer{}
+	v.MarshalEasyJSON(&w)
+	buf := pool.Get(bytebufferpool.WithMinSize(w.Size()))
+	data, err := w.BuildBytes(buf.B)
+	return data, bytebufferpool.PoolReturnFn(func() { pool.Put(buf) }), err
+}
+
 // Marshal returns data as a single byte slice. Method is suboptimal as the data is likely to be copied
 // from a chain of smaller chunks.
 func Marshal(v Marshaler) ([]byte, error) {

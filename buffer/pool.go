@@ -200,7 +200,7 @@ func (b *Buffer) BuildBytes(reuse ...[]byte) []byte {
 	var ret []byte
 	size := b.Size()
 
-	// If we got a buffer as argument and it is big enough, reuse it.
+	// If we got a buffer as an argument, and it is big enough, reuse it.
 	if len(reuse) == 1 && cap(reuse[0]) >= size {
 		ret = reuse[0][:0]
 	} else {
