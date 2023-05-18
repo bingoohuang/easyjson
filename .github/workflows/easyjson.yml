@@ -47,14 +47,14 @@ jobs:
         with:
           arch: ${{ matrix.arch }}
           distro: ${{ matrix.distro }}
-          install: |
-            apt-get update
-            apt install -y curl wget make gcc
-            latestGo=$(curl "https://golang.org/VERSION?m=text")
-            wget --quiet "https://dl.google.com/go/${latestGo}.linux-${{ matrix.arch }}.tar.gz"
-            rm -f $(which go)
-            rm -rf /usr/local/go
-            tar -C /usr/local -xzf "${latestGo}.linux-${{ matrix.arch }}.tar.gz"
+#          install: |
+#            apt-get update
+#            apt install -y curl wget make gcc
+#            latestGo=$(curl "https://golang.org/VERSION?m=text")
+#            wget --quiet "https://dl.google.com/go/${latestGo}.linux-${{ matrix.arch }}.tar.gz"
+#            rm -f $(which go)
+#            rm -rf /usr/local/go
+#            tar -C /usr/local -xzf "${latestGo}.linux-${{ matrix.arch }}.tar.gz"
           run: |
             export PATH=/usr/local/go/bin:$PATH
             export PATH=~/go/bin:$PATH
