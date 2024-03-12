@@ -38,6 +38,7 @@ var primitiveDecoders = map[reflect.Kind]string{
 
 var primitiveStringDecoders = map[reflect.Kind]string{
 	reflect.String:  "in.String()",
+	reflect.Bool:    "in.BoolStr()",
 	reflect.Int:     "in.IntStr()",
 	reflect.Int8:    "in.Int8Str()",
 	reflect.Int16:   "in.Int16Str()",

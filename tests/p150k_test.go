@@ -13,3 +13,19 @@ func Test150K(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestS2(t *testing.T) {
+	r := S2{A: 150}
+	data, _ := easyjson.Marshal(r)
+	t.Log((string)(data))
+
+	d := `{"a":"150","b":"true"}`
+	var s2 S2
+	easyjson.Unmarshal([]byte(d), &s2)
+	t.Log(s2)
+
+	d3 := `{"a":150}`
+	var s3 S2
+	easyjson.Unmarshal([]byte(d3), &s3)
+	t.Log(s3)
+}

@@ -633,6 +633,29 @@ func (r *Lexer) Consumed() {
 	}
 }
 
+func (r *Lexer) unsafeStringNumber(skipUnescape bool) (string, []byte) {
+	if r.token.kind == tokenUndef && r.Ok() {
+		r.FetchToken()
+	}
+
+	if !r.Ok() || r.token.kind != tokenString && r.token.kind != tokenNumber {
+		r.errInvalidToken("string|number")
+		return "", nil
+	}
+
+	if !skipUnescape && r.token.kind == tokenString {
+		if err := r.unescapeStringToken(); err != nil {
+			r.errInvalidToken("string")
+			return "", nil
+		}
+	}
+
+	bytes := r.token.byteValue
+	ret := bytesToStr(r.token.byteValue)
+	r.consume()
+	return ret, bytes
+}
+
 func (r *Lexer) unsafeString(skipUnescape bool) (string, []byte) {
 	if r.token.kind == tokenUndef && r.Ok() {
 		r.FetchToken()
@@ -918,12 +941,40 @@ func (r *Lexer) Int64() int64 {
 	return n
 }
 
+// BoolStr reads a true or false boolean keyword.
+func (r *Lexer) BoolStr() bool {
+	if r.token.kind == tokenUndef && r.Ok() {
+		r.FetchToken()
+	}
+	if !r.Ok() || r.token.kind != tokenBool && r.token.kind != tokenString {
+		r.errInvalidToken("bool")
+		return false
+	}
+
+	if r.token.kind == tokenString {
+		if !bytes.EqualFold([]byte("true"), r.token.byteValue) &&
+			!bytes.EqualFold([]byte("false"), r.token.byteValue) {
+			r.errInvalidToken("bool")
+			return false
+		}
+	}
+
+	var ret bool
+	if r.token.kind == tokenBool {
+		ret = r.token.boolValue
+	} else {
+		ret = bytes.EqualFold([]byte("true"), r.token.byteValue)
+	}
+	r.consume()
+	return ret
+}
+
 func (r *Lexer) Int() int {
 	return int(r.Int64())
 }
 
 func (r *Lexer) Uint8Str() uint8 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
@@ -940,7 +991,7 @@ func (r *Lexer) Uint8Str() uint8 {
 }
 
 func (r *Lexer) Uint16Str() uint16 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
@@ -957,7 +1008,7 @@ func (r *Lexer) Uint16Str() uint16 {
 }
 
 func (r *Lexer) Uint32Str() uint32 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
@@ -974,7 +1025,7 @@ func (r *Lexer) Uint32Str() uint32 {
 }
 
 func (r *Lexer) Uint64Str() uint64 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
@@ -999,7 +1050,7 @@ func (r *Lexer) UintptrStr() uintptr {
 }
 
 func (r *Lexer) Int8Str() int8 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
@@ -1016,7 +1067,7 @@ func (r *Lexer) Int8Str() int8 {
 }
 
 func (r *Lexer) Int16Str() int16 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
@@ -1033,7 +1084,7 @@ func (r *Lexer) Int16Str() int16 {
 }
 
 func (r *Lexer) Int32Str() int32 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
@@ -1050,7 +1101,7 @@ func (r *Lexer) Int32Str() int32 {
 }
 
 func (r *Lexer) Int64Str() int64 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
@@ -1088,7 +1139,7 @@ func (r *Lexer) Float32() float32 {
 }
 
 func (r *Lexer) Float32Str() float32 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
@@ -1121,7 +1172,7 @@ func (r *Lexer) Float64() float64 {
 }
 
 func (r *Lexer) Float64Str() float64 {
-	s, b := r.unsafeString(false)
+	s, b := r.unsafeStringNumber(false)
 	if !r.Ok() {
 		return 0
 	}
